@@ -1,0 +1,4 @@
+name: 'Drupal Python'
+description: "Service to run python."
+core_version_requirement: ^9 || ^10
+type: module

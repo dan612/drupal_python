@@ -1,0 +1,4 @@
+services:
+  drupal_python.conduit:
+    class: Drupal\drupal_python\DrupalPython
+    arguments: ['@config.factory']

@@ -1,0 +1,7 @@
+drupal_python.settings:
+  path: '/admin/config/drupal_python'
+  defaults:
+    _form: '\Drupal\drupal_python\Form\PythonScriptPathsForm'
+    _title: 'Python Scripts'
+  requirements:
+    _permission: 'administer site configuration'
