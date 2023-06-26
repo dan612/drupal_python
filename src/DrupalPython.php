@@ -41,10 +41,16 @@ class DrupalPython {
    *   Version of python to run command in.
    * @return false|string|void|null
    */
-  public function runScript($script_name, $python_ver = 3) {
+  public function runScript($script_name, $python_ver = 3, $args = []) {
     if (isset($this->scripts[$script_name])) {
       $script_path = $this->scripts[$script_name];
-      return shell_exec('python' . $python_ver .  " $script_path");
+      $command = 'python' . $python_ver .  " $script_path";
+      if (!empty($args)) {
+        foreach ($args as $arg) {
+          $command .= " $arg";
+        }
+      }
+      return shell_exec($command);
     }
   }
 
