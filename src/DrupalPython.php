@@ -3,6 +3,9 @@
 namespace Drupal\drupal_python;
 
 use Drupal\Core\Config\ConfigFactory;
+use mikehaertl\shellcommand\Command;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 class DrupalPython {
 
@@ -44,13 +47,20 @@ class DrupalPython {
   public function runScript($script_name, $python_ver = 3, $args = []) {
     if (isset($this->scripts[$script_name])) {
       $script_path = $this->scripts[$script_name];
-      $command = 'python' . $python_ver .  " $script_path";
+      $python = 'python' . $python_ver;
+      $cmd = new Command($python);
+      $cmd->addArg($script_path);
       if (!empty($args)) {
         foreach ($args as $arg) {
-          $command .= " $arg";
+          $cmd->addArg($arg);
         }
       }
-      return shell_exec($command);
+      $process = Process::fromShellCommandline($cmd->__toString());
+      $process->run();
+      if (!$process->isSuccessful()) {
+        throw new ProcessFailedException($process);
+      }
+      return $process->getOutput();
     }
   }
 
