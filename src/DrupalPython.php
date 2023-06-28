@@ -3,7 +3,6 @@
 namespace Drupal\drupal_python;
 
 use Drupal\Core\Config\ConfigFactory;
-use mikehaertl\shellcommand\Command;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
@@ -17,6 +16,13 @@ class DrupalPython {
   private $scripts = [];
 
   /**
+   * The current environment version of Python.
+   *
+   * @var string
+   */
+  private $pythonVersion;
+
+  /**
    * Path to Python scripts.
    */
   public $pythonScriptsPath;
@@ -25,9 +31,14 @@ class DrupalPython {
    * Public constructor.
    */
   public function __construct(ConfigFactory $config) {
+    // Set the Python version from the env.
+    $this->setPythonVersion();
+    // Load all scripts from defined dir.
     $this->pythonScriptsPath = $config->get('drupal_python.settings')->get('scripts_path');
+    // Make sure .py extension on script.
     $scripts = glob($this->pythonScriptsPath . '/*.py');
     foreach ($scripts as $script_path) {
+      // Ensure not a blank file, somehow.
       if (strlen($script_path) > 0) {
         $script_name = str_replace('.py', '', basename($script_path));
         $this->scripts[$script_name] = $script_path;
@@ -40,27 +51,53 @@ class DrupalPython {
    *
    * @param $script_name
    *   The name of the script, without ".py" extension.
-   * @param $python_ver
-   *   Version of python to run command in.
+   *
    * @return false|string|void|null
    */
-  public function runScript($script_name, $python_ver = 3, $args = []) {
-    if (isset($this->scripts[$script_name])) {
-      $script_path = $this->scripts[$script_name];
-      $python = 'python' . $python_ver;
-      $cmd = new Command($python);
-      $cmd->addArg($script_path);
-      if (!empty($args)) {
-        foreach ($args as $arg) {
-          $cmd->addArg($arg);
-        }
+  public function runScript($script_name, $args = []) {
+    if (!isset($this->scripts[$script_name])) {
+      return FALSE;
+    }
+    $script_path = $this->scripts[$script_name];
+    $cmd = [
+      $this->pythonVersion,
+      $script_path
+    ];
+    if (!empty($args)) {
+      foreach ($args as $arg) {
+        $cmd[] = $arg;
       }
-      $process = Process::fromShellCommandline($cmd->__toString());
+    }
+    $process = new Process($cmd);
+    $process->run();
+    if (!$process->isSuccessful()) {
+      throw new ProcessFailedException($process);
+    }
+
+    return $process->getOutput();
+  }
+
+  /**
+   * Detect the installed Python version.
+   *
+   * @return void
+   */
+  public function setPythonVersion() {
+    $python_versions = [
+      'python',
+      'python2',
+      'python3',
+    ];
+    foreach ($python_versions as $python_version) {
+      $cmd = [
+        $python_version,
+        '--version',
+      ];
+      $process = new Process($cmd);
       $process->run();
-      if (!$process->isSuccessful()) {
-        throw new ProcessFailedException($process);
+      if ($process->isSuccessful()) {
+        $this->pythonVersion = $python_version;
       }
-      return $process->getOutput();
     }
   }
 
