@@ -2,8 +2,21 @@
 This module provides a simple service which wraps around a shell exec command
 to run Python scripts within Drupal development workflows.
 
+### Installation
+Add this to your project `composer.json` file in the `repositories` section
+```
+"drupal/drupal_python": {
+    "type": "vcs",
+    "url": "https://github.com/dan612/drupal_python.git"
+}
+```
+Then run:
+```
+composer require drupal/drupal_python
+```
+
 ### How to set up
-Go to `/admin/config/drupal_python` and set the path to where your
+After enabling the module, go to `/admin/config/drupal_python` and set the path to where your
 python scripts are stored. Once you add scripts there they will
 be autoloaded to the service and ready for usage. The script name will
 be stored as the filename without the `.py` extension, i.e. `getTime.py`
